@@ -9,7 +9,7 @@ import ReactMarkdown from "react-markdown";
 
 /**
  * Default API base — matches your main.py default.
- * Override with REACT_APP_API_BASE or NEXT_PUBLIC_API_BASE env var if needed.
+ * Override with REACT_APP_API_URL or NEXT_PUBLIC_API_URL env var if needed.
  */
 const API_URL = import.meta.env.VITE_API_URL || "https://api.webisdomtech.com/";
 
@@ -202,7 +202,7 @@ export function ChatInterface({ className }: { className?: string }) {
 
     let es: EventSource | null = null;
     try {
-      es = new EventSource(`${API_BASE}/events`);
+      es = new EventSource(`${API_URL}/events`);
       eventSourceRef.current = es;
 
       es.onmessage = (evt) => {
@@ -301,7 +301,7 @@ export function ChatInterface({ className }: { className?: string }) {
       email: email || undefined,
     };
 
-    const resp = await fetch(`${API_BASE}/chat`, {
+    const resp = await fetch(`${API_URL}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -459,7 +459,7 @@ export function ChatInterface({ className }: { className?: string }) {
 
       // Stage booking
       const emailParam = encodeURIComponent(formData.email || email || "");
-      const stageResp = await fetch(`${API_BASE}/bookings/stage?email=${emailParam}`, {
+      const stageResp = await fetch(`${API_URL}/bookings/stage?email=${emailParam}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(stagePayload),
@@ -486,7 +486,7 @@ export function ChatInterface({ className }: { className?: string }) {
         extras: formData.extras || [],
       };
 
-      const confirmResp = await fetch(`${API_BASE}/bookings/confirm`, {
+      const confirmResp = await fetch(`${API_URL}/bookings/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(confirmBody),
@@ -523,7 +523,7 @@ export function ChatInterface({ className }: { className?: string }) {
   /* ---------------- Addon / pending balance helpers ---------------- */
   async function createAddonCheckout(sessionId: string, extras: string[]) {
     // send POST with query params: /addons/checkout?session_id=...&extras=val&extras=val
-    const url = new URL(`${API_BASE}/addons/checkout`);
+    const url = new URL(`${API_URL}/addons/checkout`);
     url.searchParams.append("session_id", sessionId);
     extras.forEach((x) => url.searchParams.append("extras", x));
     const resp = await fetch(url.toString(), { method: "POST" });
@@ -538,7 +538,7 @@ export function ChatInterface({ className }: { className?: string }) {
 
   async function payPendingBalance(amount: number) {
     try {
-      const resp = await fetch(`${API_BASE}/billing/checkout`, {
+      const resp = await fetch(`${API_URL}/billing/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount }),
