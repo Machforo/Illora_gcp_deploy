@@ -199,13 +199,21 @@ async def sse_events(request: Request):
             while True:
                 if await request.is_disconnected():
                     break
-                msg = await q.get()
-                yield f"data: {msg}\n\n"
+                try:
+                    msg = await asyncio.wait_for(q.get(), timeout=15.0)
+                    yield f"data: {msg}\n\n"
+                except asyncio.TimeoutError:
+                    # send heartbeat every 15s
+                    yield "data: {}\n\n"
         finally:
             await broker.disconnect(q)
 
     q = await broker.connect()
-    headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+        "Connection": "keep-alive"
+    }
     return StreamingResponse(event_generator(q), headers=headers, media_type="text/event-stream")
 
 # ------------------------- Pydantic Models -------------------------
