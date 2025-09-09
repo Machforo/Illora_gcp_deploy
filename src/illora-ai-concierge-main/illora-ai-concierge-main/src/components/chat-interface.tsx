@@ -11,7 +11,7 @@ import ReactMarkdown from "react-markdown";
  * Default API base — matches your main.py default.
  * Override with REACT_APP_API_URL or NEXT_PUBLIC_API_URL env var if needed.
  */
-const API_URL = import.meta.env.VITE_API_URL || "https://api.webisdomtech.com/";
+const API_URL = import.meta.env.VITE_API_URL || "https://api.webisdomtech.com";
 
 /* ---------------------- Helpers ---------------------- */
 function isoDateOnly(d?: string | Date): string | null {
