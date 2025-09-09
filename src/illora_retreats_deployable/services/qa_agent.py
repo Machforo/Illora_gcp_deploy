@@ -62,7 +62,7 @@ class ConciergeBot:
 
         agent_name = 'AI Assistant'
 
-        agents_file = 'data\\agents.json'
+        agents_file = 'data/agents.json'
         with open(agents_file, 'r') as f_new_1:
             agents = json.load(f_new_1)
         
