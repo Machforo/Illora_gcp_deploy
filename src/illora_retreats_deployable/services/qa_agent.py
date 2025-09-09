@@ -103,41 +103,49 @@ class ConciergeBot:
 
     def ask(self, query: str, user_type: Optional[str] = None) -> str:
         try:
+            print(">>> [ask] Received query:", query)
+            logger.debug(f"[ask] Received query: {query} | user_type={user_type}")
+    
             restricted_services = [
                 "wake-up call", "spa", "gym", "pool", "room service", "book a room", "booking"
             ]
             lower_query = (query or "").lower()
-
+    
             # Block restricted queries for non-guests
             if user_type == "non-guest" and any(term in lower_query for term in restricted_services):
+                print(">>> [ask] Blocked restricted query for non-guest")
                 return (
                     "We're sorry, this service is exclusive to *guests* at ILLORA RETREATS.\n"
                     "Feel free to explore our dining options, events, and lobby amenities!"
                 )
-
-            # 🔑 Correct: retrieve using raw query only
+    
+            print(">>> [ask] Retrieving docs...")
             docs = self.retriever.invoke(query)
             hotel_data = "\n\n".join(d.page_content for d in docs) if docs else ""
-
+            print(f">>> [ask] Retrieved {len(docs) if docs else 0} docs")
+    
             # Build system prompt with rules
             system_prompt = self._build_prompt(hotel_data, query)
-            print(system_prompt)
-
-            # Call the LLM directly
+            print(">>> [ask] System prompt built successfully")
+            logger.debug(f"[ask] System Prompt: {system_prompt[:500]}...")
+    
+            # 🚨 Key Debugging: check if LLM call works
+            print(">>> [ask] Invoking LLM...")
             response = self.llm.invoke(system_prompt)
-            print(response)
-
+            print(">>> [ask] LLM raw response:", response)
+            logger.debug(f"[ask] LLM Response: {response}")
+    
             final_answer = response.content.strip() if hasattr(response, "content") else str(response)
-
+            print(">>> [ask] Final answer:", final_answer)
+    
             logger.info(f"Processed query at ILLORA RETREATS: {query}")
             return final_answer or "I'm here to help with any questions about ILLORA RETREATS."
-
+    
         except Exception as e:
-            print(f"Error processing query at ILLORA RETREATS '{query}': {e}")
-            logger.error(f"Error processing query at ILLORA RETREATS '{query}': {e}")
+            print(f"!!! [ask] Error processing query '{query}': {e}")
+            logger.error(f"Error processing query at ILLORA RETREATS '{query}': {e}", exc_info=True)
             return (
                 "We're sorry, there was an issue while assisting you. "
                 "Please feel free to ask again or contact the ILLORA RETREATS front desk for immediate help."
             )
-        
-
+    
