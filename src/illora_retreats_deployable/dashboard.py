@@ -162,7 +162,7 @@ with tabs[1]:
     from datetime import date, datetime
 
     # --------- CONFIG ---------
-    API = os.getenv("AIC_API", "http://localhost:5002")  # FastAPI base
+    API = os.getenv("AIC_API", "https://api.webisdomtech.com")  # FastAPI base
 
     st.title("ILLORA RETREATS – Live Admin Dashboard")
 
