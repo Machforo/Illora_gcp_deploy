@@ -12,8 +12,8 @@ import uuid
 
 # run summarizer (keeps existing behaviour)
 summarizer.main()
-LOG_FILE = "data\\bot.log"
-SUMMARY_PATH = "data\\summary_log.jsonl"
+LOG_FILE = "data/bot.log"
+SUMMARY_PATH = "data/summary_log.jsonl"
 
 st.set_page_config(page_title="ILLORA_RETREATS – Admin Console", layout="wide")
 st.title("🏨 Illora Retreats – Concierge AI Admin Dashboard")
@@ -39,9 +39,9 @@ def ensure_csv(path, cols):
     return pd.read_csv(path)
 
 # --- Data Sources ---
-QA_CSV = "data\\qa_pairs.csv"
-MENU_FILE = "services\\menu.json"
-CAMPAIGNS_FILE = "data\\campaigns.json"
+QA_CSV = "data/qa_pairs.csv"
+MENU_FILE = "services/menu.json"
+CAMPAIGNS_FILE = "data/campaigns.json"
 
 # --- Tabs ---
 tabs = st.tabs(["📊 Analytics", "✅ UserInformation", "💬 Q&A Manager", "🏷️ Menu Manager", "📢 Campaigns Manager", "✅ Do's & ❌ Don'ts Manager", "🤖 Agents"])
@@ -453,7 +453,7 @@ with tabs[1]:
 # ======================================================
 with tabs[2]:
     st.header("💬 Q&A Manager")
-    qa_df = ensure_csv('data\\qa_pairs.csv', ["question", "answer"])
+    qa_df = ensure_csv('data/qa_pairs.csv', ["question", "answer"])
     st.dataframe(qa_df, use_container_width=True)
 
     with st.form("addqa", clear_on_submit=True):
@@ -528,7 +528,7 @@ with tabs[4]:
 with tabs[5]:
     st.header("✅ Do's & ❌ Don'ts Manager")
 
-    DOSDONTS_FILE = 'data\\dos_donts.json'    
+    DOSDONTS_FILE = 'data/dos_donts.json'    
     # Load existing instructions
     dos_donts = load_json(DOSDONTS_FILE, [])
 
@@ -560,7 +560,7 @@ with tabs[5]:
 with tabs[6]:
     st.header("✅ AGENT Manager")
 
-    agents_file = 'data\\agents.json'
+    agents_file = 'data/agents.json'
 
     # Load existing agents
     try:
