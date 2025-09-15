@@ -152,7 +152,7 @@ export function ChatInterface({ className }: { className?: string }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: `welcome-${Date.now()}`,
-      content: "Hello! Welcome to ILLORA RETREAT. I'm your concierge. How may I assist you today?",
+      content: "Hello! Welcome to ILORA RETREAT. I'm your concierge. How may I assist you today?",
       sender: "bot",
       timestamp: new Date().toISOString(),
       type: "text",
@@ -175,7 +175,7 @@ export function ChatInterface({ className }: { className?: string }) {
 
     // session id
     try {
-      const key = "illora_session_id";
+      const key = "ILORA_session_id";
       let s = localStorage.getItem(key);
       if (!s) {
         s = uuidv4();
@@ -189,7 +189,7 @@ export function ChatInterface({ className }: { className?: string }) {
 
     // email
     try {
-      const saved = localStorage.getItem("illora_email");
+      const saved = localStorage.getItem("ILORA_email");
       if (saved) setEmail(saved);
     } catch {
       // ignore
@@ -410,7 +410,7 @@ export function ChatInterface({ className }: { className?: string }) {
     // save email locally if provided
     if (typeof window !== "undefined" && formData?.email) {
       try {
-        localStorage.setItem("illora_email", formData.email);
+        localStorage.setItem("ILORA_email", formData.email);
         setEmail(formData.email);
       } catch {}
     }
@@ -565,7 +565,7 @@ export function ChatInterface({ className }: { className?: string }) {
   return (
     <div className={`flex flex-col h-full ${className || ""}`}>
       <div className="px-4 pt-3 flex items-center gap-3">
-        <div className="text-lg font-semibold">ILLORA Concierge</div>
+        <div className="text-lg font-semibold">ILORA Concierge</div>
         <div className="text-sm text-muted-foreground">Session: {sessionIdRef.current?.slice(0, 8) ?? "—"}</div>
         <div className="ml-auto">
           <Input
@@ -575,7 +575,7 @@ export function ChatInterface({ className }: { className?: string }) {
               setEmail(e.target.value);
               if (typeof window !== "undefined") {
                 try {
-                  localStorage.setItem("illora_email", e.target.value);
+                  localStorage.setItem("ILORA_email", e.target.value);
                 } catch {}
               }
             }}
@@ -707,7 +707,7 @@ export function ChatInterface({ className }: { className?: string }) {
             ref={(el) => (inputRef.current = el)}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask me anything about ILLORA Retreat..."
+            placeholder="Ask me anything about ILORA Retreat..."
             className="flex-1 h-12 rounded-full px-4"
             disabled={isTyping}
           />
