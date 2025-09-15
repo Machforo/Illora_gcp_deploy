@@ -1,4 +1,4 @@
-import heroImage from "@/assets/ILLORA-retreat-hero.jpg";
+import heroImage from "@/assets/illora-retreat-hero.jpg";
 
 export function HeroSection() {
   return (
