@@ -1,4 +1,4 @@
-import heroImage from "@/assets/illora-retreat-hero.jpg";
+import heroImage from "@/assets/ILORA-retreat-hero.jpg";
 
 export function HeroSection() {
   return (
@@ -10,10 +10,10 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-gradient-hero" />
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white p-8">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">
-          🏨 ILLORA Retreat – Your AI Concierge
+          🏨 ILORA Retreat – Your AI Concierge
         </h1>
         <p className="text-lg md:text-xl opacity-90 max-w-2xl">
-          Welcome to ILLORA Retreat, where luxury meets the wilderness.
+          Welcome to ILORA Retreat, where luxury meets the wilderness.
         </p>
       </div>
     </div>
