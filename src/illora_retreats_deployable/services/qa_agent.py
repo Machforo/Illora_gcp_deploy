@@ -37,7 +37,7 @@ class ConciergeBot:
             self.dos_donts_path = "data\\dos_donts.json"
             self.dos_donts = self._load_dos_donts()
 
-            logger.info("ILLORA RETREATS QA agent initialized successfully.")
+            logger.info("ILORA RETREATS QA agent initialized successfully.")
 
         except Exception as e:
             logger.error(f"Error initializing QA agent: {e}")
@@ -91,7 +91,7 @@ class ConciergeBot:
                     rules_text += f"- ❌ Don't: {dont}\n"
 
         return (
-            f"You are an AI agent named {agent_name} a knowledgeable, polite, and concise concierge assistant at *ILLORA RETREATS*, "
+            f"You are an AI agent named {agent_name} a knowledgeable, polite, and concise concierge assistant at *ILORA RETREATS*, "
             "a premium hotel known for elegant accommodations, gourmet dining, rejuvenating spa treatments, "
             "a fully-equipped gym, pool access, 24x7 room service, meeting spaces, and personalized hospitality.\n\n"
             "Answer smost almost all of the questions using the Hotel Data below. If the data does not contain the answer you can take it by yourself, but remember **DO NOT MAKE ANY False FACTS** "
@@ -113,7 +113,7 @@ class ConciergeBot:
             if user_type == "non-guest" and any(term in lower_query for term in restricted_services):
                 logger.info("[ask] Blocked restricted query for non-guest")
                 return (
-                    "We're sorry, this service is exclusive to *guests* at ILLORA RETREATS.\n"
+                    "We're sorry, this service is exclusive to *guests* at ILORA RETREATS.\n"
                     "Feel free to explore our dining options, events, and lobby amenities!"
                 )
     
@@ -132,12 +132,12 @@ class ConciergeBot:
             final_answer = response.content.strip() if hasattr(response, "content") else str(response)
             logger.info(f"[ask] Final answer: {final_answer[:200]}...")
     
-            return final_answer or "I'm here to help with any questions about ILLORA RETREATS."
+            return final_answer or "I'm here to help with any questions about ILORA RETREATS."
     
         except Exception as e:
             logger.error(f"[ask] Error processing query '{query}': {e}", exc_info=True)
             return (
                 "We're sorry, there was an issue while assisting you. "
-                "Please feel free to ask again or contact the ILLORA RETREATS front desk for immediate help."
+                "Please feel free to ask again or contact the ILORA RETREATS front desk for immediate help."
             )
 
