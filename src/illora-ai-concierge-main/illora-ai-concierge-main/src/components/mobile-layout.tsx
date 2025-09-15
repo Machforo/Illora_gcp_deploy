@@ -30,7 +30,7 @@ export function MobileLayout({ isGuest, onGuestStatusChange, onLogout, userDetai
             <span className="text-white font-bold text-sm">I</span>
           </div>
           <div>
-            <h1 className="font-bold text-hotel-primary">ILLORA Retreat</h1>
+            <h1 className="font-bold text-hotel-primary">ILORA Retreat</h1>
             <p className="text-xs text-muted-foreground">AI Concierge</p>
           </div>
         </div>
@@ -58,7 +58,7 @@ export function MobileLayout({ isGuest, onGuestStatusChange, onLogout, userDetai
           <div className="absolute inset-0 bg-gradient-hero" />
           <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white p-4">
             <h1 className="text-2xl font-bold mb-2">
-              🏨 ILLORA Retreat
+              🏨 ILORA Retreat
             </h1>
             <p className="text-sm opacity-90">
               Your AI Concierge
