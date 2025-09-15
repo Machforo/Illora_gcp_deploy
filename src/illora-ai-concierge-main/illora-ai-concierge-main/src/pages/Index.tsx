@@ -38,7 +38,7 @@ const Index = () => {
       setIsLoading(false);
       
       toast({
-        title: "Welcome to ILLORA Retreat!",
+        title: "Welcome to ILORA Retreat!",
         description: "You have successfully signed in to your AI concierge.",
       });
     }, 1000);
