@@ -44,7 +44,7 @@ logger = logging.getLogger("ai_chieftain")
 app = FastAPI(title="AI Chieftain API", version="1.0.0")
 
 # ------------------------- CORS -------------------------
-FRONTEND_ORIGIN = "https://ai-chieftain.webisdomtech.com/"
+FRONTEND_ORIGIN = "https://ai-chieftain.webisdomtech.com"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[FRONTEND_ORIGIN],
