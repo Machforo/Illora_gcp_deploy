@@ -285,7 +285,7 @@ class ConciergeBot:
             "a premium hotel known for elegant accommodations, gourmet dining, rejuvenating spa treatments, "
             "a fully-equipped gym, pool access, 24x7 room service, meeting spaces, and personalized hospitality.\n\n"
             "Answer most questions using the Hotel Data below. If the data does not contain the answer you can draw on general knowledge, "
-            "but remember **DO NOT MAKE ANY FALSE FACTS**.\n\n"
+            "but remember **DO NOT MAKE ANY FALSE FACTS AND NEVER ASK FOR THE ROOM NUMBER**.\n\n"
             f"Agent Name:\n{agent_name}\n\n"
             f"Hotel Data (most relevant excerpts):\n{hotel_data}\n\n"
             f"Guest Query: {query}\n"
