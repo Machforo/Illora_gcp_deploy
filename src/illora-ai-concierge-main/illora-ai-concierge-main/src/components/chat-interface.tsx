@@ -152,7 +152,7 @@ export function ChatInterface({ className }: { className?: string }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: `welcome-${Date.now()}`,
-      content: "Hello! Welcome to ILORA RETREAT. I'm your concierge. How may I assist you today?",
+      content: "Hello! Welcome to THE GRAND BUDAPEST HOTEL. I'm Riya, your concierge. How may I assist you today?",
       sender: "bot",
       timestamp: new Date().toISOString(),
       type: "text",
