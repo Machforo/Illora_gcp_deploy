@@ -28,8 +28,8 @@ export function HotelSidebar({ isGuest, onGuestStatusChange, onLogout, userDetai
             <Building2 className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-hotel-primary">ILORA</h1>
-            <p className="text-sm text-muted-foreground">Retreat</p>
+            <h1 className="text-xl font-bold text-hotel-primary">THE GRAND BUDAPEST HOTEL</h1>
+            <p className="text-sm text-muted-foreground">Excellence and Quality</p>
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@ export function HotelSidebar({ isGuest, onGuestStatusChange, onLogout, userDetai
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <Label htmlFor="guest-status" className="text-sm font-medium">
-              Are you staying at ILORA Retreat?
+              Are you staying at THE GRAND BUDAPEST HOTEL?
             </Label>
           </div>
           <div className="flex items-center space-x-2">
