@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from config import Config
 
 # Project imports
 import web_ui_final as web
@@ -42,11 +43,11 @@ logger = logging.getLogger("ai_chieftain")
 # ------------------------- FastAPI app -------------------------
 app = FastAPI(title="AI Chieftain API", version="1.0.0")
 
-from fastapi.middleware.cors import CORSMiddleware
-
+# ------------------------- CORS -------------------------
+FRONTEND_ORIGIN = "http://localhost:8080"
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ai-chieftain.webisdomtech.com"],
+    allow_origins=[FRONTEND_ORIGIN],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,6 +71,200 @@ DEMO_NAMES = [
 ]
 DEMO_ROOM_TYPES = ["Deluxe Suite", "Executive Room", "Standard Room", "Presidential Suite"]
 sample_bookings: List[Dict[str, Any]] = []
+
+
+# --- add these imports near the top of your file (if not already present) ---
+import requests
+import random
+from datetime import datetime
+from typing import Dict
+
+# Config is already in your project; ensure it's imported:
+# from config import Config
+
+# Optional: allow overriding ticket sheet tab name via Config
+TICKET_SHEET_NAME = getattr(Config, "GSHEET_TICKET_SHEET", "ticket_management")
+GSHEET_WEBAPP_URL = getattr(Config, "GSHEET_WEBAPP_URL", "https://script.google.com/macros/s/AKfycbwfh2HvU5E0Y0Ruv5Ylfwdh524c0PWLCU0NduferN4etm08ovIMO6WoFoJVszmQx__O/exec")
+GUEST_LOG_SHEET_NAME = getattr(Config, "GSHEET_GUEST_LOG_SHEET", "guest_interaction_log")
+
+# ------------- Generic helper to push a row to any sheet via your Apps Script Web App -------------
+def push_row_to_sheet(sheet_name: str, row_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Call Apps Script webapp with: { action: 'addRow', sheet: sheet_name, rowData: {...} }.
+    Returns parsed JSON from webapp or raises on error.
+    """
+    if not GSHEET_WEBAPP_URL:
+        raise RuntimeError("GSHEET_WEBAPP_URL not configured in Config")
+
+    payload = {"action": "addRow", "sheet": sheet_name, "rowData": row_data}
+    resp = requests.post(GSHEET_WEBAPP_URL, json=payload, timeout=10)
+    resp.raise_for_status()
+    try:
+        return resp.json()
+    except Exception:
+        return {"status_code": resp.status_code, "text": resp.text}
+    
+# ------------- Guest interaction logging helper -------------
+def _naive_sentiment(message: str) -> str:
+    """Very small sentiment heuristic (optional). Returns 'positive' / 'negative' / ''."""
+    if not message:
+        return ""
+    m = message.lower()
+    negative_words = ["not", "no", "never", "bad", "disappointed", "angry", "hate", "worst", "problem", "issue", "delay"]
+    positive_words = ["good", "great", "awesome", "excellent", "happy", "love", "enjoy"]
+    if any(w in m for w in negative_words) and not any(w in m for w in positive_words):
+        return "negative"
+    if any(w in m for w in positive_words) and not any(w in m for w in negative_words):
+        return "positive"
+    return ""
+
+def create_guest_log_row(req_session_id: Optional[str], email: Optional[str], user_input: str, bot_response: str,
+                         intent: str, is_guest_flag: bool, ref_ticket_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Build a row matching headers:
+    Log ID | Timestamp | Source | Session ID | Guest Email | Guest Name | User Input | Bot Response | Intent | Guest Type | Sentiment | Reference Ticket ID | Conversation URL
+    """
+    log_id = f"LOG-{random.randint(1000,999999)}"
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    source = "web"
+    session_id = req_session_id or ""
+    guest_email = email or ""
+    guest_name = "Guest"
+    user_input_val = user_input or ""
+    bot_response_val = bot_response or ""
+    intent_val = intent or ""
+    guest_type = "guest" if bool(is_guest_flag) else "non-guest"
+    sentiment = _naive_sentiment(user_input)
+    reference_ticket_id = ref_ticket_id or ""
+    conversation_url = ""  # optional — left blank or build if you have a UI link
+
+    return {
+        "Log ID": log_id,
+        "Timestamp": timestamp,
+        "Source": source,
+        "Session ID": session_id,
+        "Guest Email": guest_email,
+        "Guest Name": guest_name,
+        "User Input": user_input_val,
+        "Bot Response": bot_response_val,
+        "Intent": intent_val,
+        "Guest Type": guest_type,
+        "Sentiment": sentiment,
+        "Reference Ticket ID": reference_ticket_id,
+        "Conversation URL": conversation_url,
+    }
+
+# --- Local ticket-detection heuristic ---
+def is_ticket_request(message: str, intent: str, addon_matches: list = None) -> bool:
+    """
+    Return True when message likely requests a service/add-on that should create a ticket.
+    Combines intent signals + simple keyword scanning + menu addon hints.
+    """
+    if not message:
+        return False
+    lower = message.lower()
+
+    # Strong intents from your classifier that clearly map to service requests
+    ticket_intents = {
+        "book_addon_spa",
+        "book_addon_beverage",
+        "book_addon_food",
+        "request_service",
+        "room_service_request",
+        "maintenance_request",
+        "order_addon",
+        # (add other classifier intent names you use)
+    }
+    if intent in ticket_intents:
+        return True
+
+    # Keyword-based fallback (covers "order a coffee", "please bring towel", "fix ac", etc.)
+    keywords = [
+        "coffee", "tea", "order", "bring", "deliver", "room service", "food", "meal", "snack",
+        "towel", "clean", "housekeeping", "makeup room", "turn down", "repair", "fix", "ac", "wifi",
+        "tv", "light", "broken", "leak", "toilet", "bathroom", "shower"
+    ]
+    if any(k in lower for k in keywords):
+        return True
+
+    # If we already matched menu addons (e.g., "club sandwich" matched), that's also a ticket trigger
+    if addon_matches and len(addon_matches) > 0:
+        return True
+
+    return False
+
+def classify_ticket_category(message: str) -> str:
+    """Map message content to a ticket category."""
+    m = message.lower()
+    if any(w in m for w in ["coffee", "tea", "drink", "food", "meal", "snack", "beverage", "breakfast", "lunch", "dinner"]):
+        return "Food"
+    if any(w in m for w in ["towel", "clean", "housekeeping", "room service", "bed", "makeup", "turn down", "linen"]):
+        return "Room Service"
+    if any(w in m for w in ["ac", "wifi", "tv", "light", "repair", "engineer", "fix", "leak", "broken", "toilet", "plumb", "electr"]):
+        return "Engineering"
+    return "General"
+
+def assign_staff_for_category(category: str) -> str:
+    return {
+        "Food": "Food Staff",
+        "Room Service": "Room Service",
+        "Engineering": "Engineering",
+        "General": "Front Desk"
+    }.get(category, "Front Desk")
+
+def create_ticket_row_payload(message: str, email: str = None) -> Dict[str, str]:
+    """
+    Build the exact rowData dict matching your sheet's headers:
+    Ticket ID | Guest Name | Room No | Request/Query | Category | Assigned To | Status | Created At | Resolved At | Notes
+    """
+    ticket_id = f"TCK-{random.randint(1000, 99999)}"
+    guest_name = email or "Guest"
+    room_no = str(random.randint(100, 200))
+    category = classify_ticket_category(message)
+    assigned_to = assign_staff_for_category(category)
+    status = "In Progress"
+    created_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    resolved_at = ""  # empty initially
+    notes = message
+
+    # Use exact header names present in the spreadsheet (case + spaces matter for the Apps Script mapping)
+    return {
+        "Ticket ID": ticket_id,
+        "Guest Name": guest_name,
+        "Room No": room_no,
+        "Request/Query": message,
+        "Category": category,
+        "Assigned To": assigned_to,
+        "Status": status,
+        "Created At": created_at,
+        "Resolved At": resolved_at,
+        "Notes": notes
+    }
+
+def push_ticket_to_sheet(row_data: Dict[str, str]) -> Dict:
+    """
+    Call your Apps Script webapp with { action: 'addRow', sheet: <sheetName>, rowData: {...} }.
+    Returns the parsed JSON response or raises on network error.
+    """
+    if not GSHEET_WEBAPP_URL:
+        raise RuntimeError("GSHEET_WEBAPP_URL not configured in Config")
+
+    payload = {
+        "action": "addRow",
+        "sheet": TICKET_SHEET_NAME,
+        "rowData": row_data
+    }
+    try:
+        resp = requests.post(GSHEET_WEBAPP_URL, json=payload, timeout=10)
+        # Apps Script returns JSON like { success: true, message: 'Row added successfully' }
+        try:
+            return resp.json()
+        except Exception:
+            resp.raise_for_status()
+            return {"ok": True, "status_code": resp.status_code}
+    except Exception as e:
+        # bubble up error to caller for graceful logging
+        raise
 
 # ------------------------- Helpers -------------------------
 def get_db() -> Session:
@@ -199,21 +394,13 @@ async def sse_events(request: Request):
             while True:
                 if await request.is_disconnected():
                     break
-                try:
-                    msg = await asyncio.wait_for(q.get(), timeout=15.0)
-                    yield f"data: {msg}\n\n"
-                except asyncio.TimeoutError:
-                    # send heartbeat every 15s
-                    yield "data: {}\n\n"
+                msg = await q.get()
+                yield f"data: {msg}\n\n"
         finally:
             await broker.disconnect(q)
 
     q = await broker.connect()
-    headers = {
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
-        "Connection": "keep-alive"
-    }
+    headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
     return StreamingResponse(event_generator(q), headers=headers, media_type="text/event-stream")
 
 # ------------------------- Pydantic Models -------------------------
@@ -344,10 +531,12 @@ def me(token: str = Query(...)):
 
 
 # ---------------- Chat endpoint ----------------
+# -------------------- Updated /chat endpoint (drop-in replacement) --------------------
 @app.post("/chat", response_model=ChatResp)
 def chat(req: ChatReq):
-    user_input = req.message
+    user_input = req.message or ""
     is_guest = bool(req.is_guest)
+    # keep original behavior for bot.ask (minimal changes)
     bot_reply_text = bot.ask(user_input, user_type=is_guest)
     intent = classify_intent(user_input)
     actions = ChatActions()
@@ -374,6 +563,42 @@ def chat(req: ChatReq):
     message_lower = user_input.lower()
     addon_matches = [k for k in AVAILABLE_EXTRAS if k.lower() in message_lower]
 
+    # ------------------ Ticket creation (if detected) ------------------
+    created_ticket_id: Optional[str] = None
+    try:
+        if is_ticket_request(user_input, intent, addon_matches):
+            ticket_row = create_ticket_row_payload(user_input, req.email)
+            try:
+                resp_json = push_row_to_sheet(TICKET_SHEET_NAME, ticket_row)
+                created_ticket_id = ticket_row.get("Ticket ID")
+                logger.info("Ticket created: %s (sheet resp: %s)", created_ticket_id, resp_json)
+                # broadcast ticket_created SSE event (best-effort)
+                try:
+                    asyncio.create_task(broker.broadcast("ticket_created", {
+                        "ticket_id": created_ticket_id,
+                        "guest_email": req.email,
+                        "room_no": ticket_row.get("Room No"),
+                        "category": ticket_row.get("Category"),
+                        "assigned_to": ticket_row.get("Assigned To"),
+                        "status": ticket_row.get("Status"),
+                        "created_at": ticket_row.get("Created At"),
+                        "notes": ticket_row.get("Notes"),
+                    }))
+                except RuntimeError:
+                    pass
+            except Exception as e:
+                logger.warning("Failed to push ticket to sheet: %s", e)
+    except Exception as e:
+        logger.warning("Ticket subsystem error: %s", e)
+
+    # ------------------ booking form logic (HARD-CODED keyword check) ------------------
+    # Only show booking form when user explicitly asks to book/reserve a room (keyword-based).
+    booking_keywords = ["book a room", "book room", "book", "reserve", "reservation", "room availability"]
+    if any(kw in message_lower for kw in booking_keywords):
+        actions.show_booking_form = True
+    # (We intentionally removed reliance on generic "payment_request" to show forms)
+
+    # ------------------ addon checkout logic (kept as-is) ------------------
     if intent in ('book_addon_spa', 'book_addon_beverage', 'book_addon_food'):
         actions.addons = addon_matches
         try:
@@ -386,23 +611,36 @@ def chat(req: ChatReq):
             logger.warning("create_addon_checkout_session failed: %s", e)
             actions.payment_link = None
 
-    if intent in ("payment_request", "booking_request"):
-        actions.show_booking_form = True
+    # NOTE: removed the old "if intent == 'checkout_balance':" payment flow replacement was requested.
+    # If you still want pending-balance support via web.get_due_items_details, add a distinct keyword or endpoint.
 
-    if intent == "checkout_balance":
-        details, total = web.get_due_items_details(req.email)
-        if total and total > 0:
-            try:
-                pay_url = create_pending_checkout_session(total)
-                actions.pending_balance = {"amount": total, "items": details, "payment_link": pay_url}
-            except Exception as e:
-                logger.warning("Pending checkout creation failed: %s", e)
-                actions.pending_balance = {"amount": total, "items": details, "payment_link": None}
-
-    # file-based log
+    # file-based log (keep existing)
     log_chat("web", req.session_id or "", user_input, bot_reply_text, intent, is_guest)
 
-    # persist to DB and broadcast
+    # ------------------ append guest interaction log to sheet ------------------
+    try:
+        log_row = create_guest_log_row(req.session_id, req.email, user_input, bot_reply_text, intent, is_guest, created_ticket_id)
+        try:
+            resp_log = push_row_to_sheet(GUEST_LOG_SHEET_NAME, log_row)
+            logger.info("Guest interaction logged to sheet (Log ID=%s): %s", log_row.get("Log ID"), resp_log)
+            # optionally broadcast a guest_log_created SSE event
+            try:
+                asyncio.create_task(broker.broadcast("guest_log_created", {
+                    "log_id": log_row.get("Log ID"),
+                    "session_id": log_row.get("Session ID"),
+                    "guest_email": log_row.get("Guest Email"),
+                    "intent": intent,
+                    "ticket_ref": created_ticket_id,
+                    "timestamp": log_row.get("Timestamp")
+                }))
+            except RuntimeError:
+                pass
+        except Exception as e:
+            logger.warning("Failed to push guest log to sheet: %s", e)
+    except Exception as e:
+        logger.warning("Guest log subsystem error: %s", e)
+
+    # ------------------ persist to DB and broadcast (unchanged) ------------------
     db = SessionLocal()
     try:
         cm_user = ChatMessage(
@@ -429,9 +667,8 @@ def chat(req: ChatReq):
         db.add(cm_bot)
         db.commit(); db.refresh(cm_bot)
 
-        # broadcast (best-effort)
+        # broadcast chat_message
         try:
-            # use create_task safely if loop exists
             asyncio.create_task(broker.broadcast("chat_message", {
                 "session_id": req.session_id,
                 "email": req.email,
@@ -440,7 +677,6 @@ def chat(req: ChatReq):
                 "intent": intent
             }))
         except RuntimeError:
-            # not in loop - ignore
             pass
 
     except Exception as e:
@@ -451,7 +687,6 @@ def chat(req: ChatReq):
 
     reply_parts = bot_reply_text.split("\n\n")
     return ChatResp(reply=bot_reply_text, reply_parts=reply_parts, intent=intent, actions=actions)
-
 
 # ---------------- Add-ons ----------------
 @app.get("/addons/catalog")
