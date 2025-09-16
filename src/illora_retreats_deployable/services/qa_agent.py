@@ -281,7 +281,7 @@ class ConciergeBot:
                     campaigns_text += f"- {title} {('- ' + desc) if desc else ''}\n"
 
         return (
-            f"You are an AI agent named {agent_name}, a knowledgeable, polite, and concise concierge assistant at *ILORA RETREATS*, "
+            f"You are an AI agent named {agent_name}, a knowledgeable, polite, and concise concierge assistant at *THE GRAND BUDAPEST HOTEL*, "
             "a premium hotel known for elegant accommodations, gourmet dining, rejuvenating spa treatments, "
             "a fully-equipped gym, pool access, 24x7 room service, meeting spaces, and personalized hospitality.\n\n"
             "Answer most questions using the Hotel Data below. If the data does not contain the answer you can draw on general knowledge, "
@@ -341,13 +341,13 @@ class ConciergeBot:
 
             final_answer = response.content.strip() if hasattr(response, "content") else str(response)
 
-            logger.info(f"Processed query at ILORA RETREATS: {query}")
-            return final_answer or "I'm here to help with any questions about ILORA RETREATS."
+            logger.info(f"Processed query at THE GRAND BUDAPEST HOTEL: {query}")
+            return final_answer or "I'm here to help with any questions about THE GRAND BUDAPEST HOTEL."
 
         except Exception as e:
-            print(f"Error processing query at ILORA RETREATS '{query}': {e}")
-            logger.error(f"Error processing query at ILORA RETREATS '{query}': {e}")
+            print(f"Error processing query at THE GRAND BUDAPEST HOTEL '{query}': {e}")
+            logger.error(f"Error processing query at THE GRAND BUDAPEST HOTEL '{query}': {e}")
             return (
                 "We're sorry, there was an issue while assisting you. "
-                "Please feel free to ask again or contact the ILORA RETREATS front desk for immediate help."
+                "Please feel free to ask again or contact the THE GRAND BUDAPEST HOTEL front desk for immediate help."
             )
