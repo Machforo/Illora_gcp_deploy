@@ -565,7 +565,7 @@ export function ChatInterface({ className }: { className?: string }) {
   return (
     <div className={`flex flex-col h-full ${className || ""}`}>
       <div className="px-4 pt-3 flex items-center gap-3">
-        <div className="text-lg font-semibold">ILORA Concierge</div>
+        <div className="text-lg font-semibold">HOTEL Concierge</div>
         <div className="text-sm text-muted-foreground">Session: {sessionIdRef.current?.slice(0, 8) ?? "—"}</div>
         <div className="ml-auto">
           <Input
@@ -707,7 +707,7 @@ export function ChatInterface({ className }: { className?: string }) {
             ref={(el) => (inputRef.current = el)}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask me anything about ILORA Retreat..."
+            placeholder="Ask me anything about THE GRAND BUDAPEST HOTEL Retreat..."
             className="flex-1 h-12 rounded-full px-4"
             disabled={isTyping}
           />
