@@ -27,7 +27,7 @@ export function LoginForm({ onLogin, isLoading }: LoginFormProps) {
           <div className="mx-auto mb-4 w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center">
             <User className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-hotel-primary">Welcome to ILLORA Retreat</CardTitle>
+          <CardTitle className="text-2xl font-bold text-hotel-primary">Welcome to THE GRAND BUDAPEST HOTEL</CardTitle>
           <CardDescription>Sign in to access your AI concierge</CardDescription>
         </CardHeader>
         <CardContent>
